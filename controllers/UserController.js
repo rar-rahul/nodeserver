@@ -42,6 +42,40 @@ exports.register = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
-  console.log(req.body);
-  //hash password using bcrypt
+  
+    const user = await Users.findOne({email:req.body.email});
+    //check email is exist or not
+    if(!user){
+        res.status(400).json({
+            status:"fail",
+            message:"User Not Found"
+        })
+    }
+    //compare password and then check
+    const checkpass =  await bcrypt.compare(req.body.password,user.password);
+    if(!checkpass){
+        res.status(400).json({
+            status:"fail",
+            message:"Password Not Match"
+        })
+    }
+
+    //option expireIn object
+    const options = {
+        expiresIn: '1h' // Token expiration time
+      };
+
+    //sign in and genrate token
+    const token = jwt.sign({ _id: user._id },process.env.JWT_SECRET,options);
+    res.header('auth-token', token);
+
+    res.status(200).json({
+        success: 'success',
+        token,
+        user,
+        message:'Logged In !'
+    });
+
+
+
 };
